@@ -29,6 +29,15 @@ group. The registered class must meet the following requirements:
 * The docstring of the class is used when the user does --help. The first
   line is treated as the summary, and all other lines are displayed when
   the subcommand specific help is queried.
+
+If the subcommand is a group of commands:
+
+* The class must have a `subcommands` attribute, which is a list of
+  (name, subcommand_class) tuples. The subcommand_class must meet the requirements
+  for a subcommand.
+
+If it is a subcommand that is executed:
+
 * The constructor must take a single argument, an argparse.ArgumentParser.
   The object may register any arguments or subparsers that it needs.
 * The `run` function is called when the subcommand is used by the user.
