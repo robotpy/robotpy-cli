@@ -162,6 +162,38 @@ class _CustomHelpAction(argparse.Action):
 argparse._HelpAction = _CustomHelpAction  # type: ignore
 
 
+def _make_subcommands(
+    parser: argparse.ArgumentParser,
+    cmds: typing.List[typing.Tuple[str, typing.Type]],
+    subcmd_dest: str,
+):
+    subparser = parser.add_subparsers(dest=subcmd_dest, help="subcommands")
+
+    cmds.sort()
+
+    for name, cmd_class in cmds:
+        desc = inspect.getdoc(cmd_class)
+        if desc:
+            help = desc.split("\n", 1)[0]
+        else:
+            help = None
+
+        cmdparser = subparser.add_parser(
+            name,
+            description=desc,
+            help=help,
+            formatter_class=argparse.RawDescriptionHelpFormatter,
+        )
+
+        subcommands = getattr(cmd_class, "subcommands", None)
+        if subcommands:
+            _make_subcommands(cmdparser, subcommands, f"{subcmd_dest}_{name}")
+            cmdparser.set_defaults(parser=cmdparser)
+        else:
+            obj = cmd_class(cmdparser)
+            cmdparser.set_defaults(cmdobj=obj)
+
+
 def main() -> typing.NoReturn:
     """
     This function loads available entry points, parses arguments, and
@@ -188,8 +220,6 @@ def main() -> typing.NoReturn:
         default=pathlib.Path("robot.py").absolute(),
         type=lambda p: pathlib.Path(p).absolute(),
     )
-
-    subparser = parser.add_subparsers(dest="command", help="commands")
 
     parser.add_argument(
         "-v",
@@ -228,34 +258,17 @@ def main() -> typing.NoReturn:
 
         cmds.append((entry_point.name, cmd_class))
 
-    cmds.sort()
+    _make_subcommands(parser, cmds, "command")
 
-    for name, cmd_class in cmds:
-        desc = inspect.getdoc(cmd_class)
-        if desc:
-            help = desc.split("\n", 1)[0]
-        else:
-            help = None
-
-        cmdparser = subparser.add_parser(
-            name,
-            description=desc,
-            help=help,
-            formatter_class=argparse.RawDescriptionHelpFormatter,
-        )
-        obj = cmd_class(cmdparser)
-        cmdparser.set_defaults(cmdobj=obj)
-        has_cmd = True
-
-    if not has_cmd:
+    if not cmds:
         parser.error(
             "No entry points defined -- robot code can't do anything. Install packages to add entry points (see README)"
         )
         sys.exit(1)
 
     options = parser.parse_args()
-    if options.command is None:
-        parser.print_help()
+    if options.command is None or getattr(options, "cmdobj", None) is None:
+        getattr(options, "parser", parser).print_help()
         sys.exit(1)
 
     main_file: pathlib.Path = options.main_file
