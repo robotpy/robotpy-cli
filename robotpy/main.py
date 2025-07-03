@@ -25,6 +25,45 @@ else:
 robot_py_path: typing.Optional[pathlib.Path] = None
 
 
+def _exists_case_sensitive(path: pathlib.Path) -> bool:
+    """
+    case sensitive replacement for pathlib.Path.exists().
+    This only checks the file or dir at the end of the path exists and has correct case.
+    This is required because Windows by default does not check case.
+    In the case where the path ends in '..' and the directory exists then True is returned.
+    Do NOT .resolve() the path before calling.
+    """
+
+    # exit if the path does not exist; continue to confim the case
+    if not path.exists():
+        return False
+
+    # resolve makes the path object have the accurate capitilization of each part
+    resolved_path = path.resolve()
+
+    if path.is_file():
+        if resolved_path.name == path.name:
+            return True
+
+        return False
+
+    elif path.is_dir():
+        # this will get rid of a '.' at the end of a path
+        absolute_path = path.absolute()
+
+        # no case check nessisary if true
+        if absolute_path.parts[-1] == "..":
+            return True
+
+        if resolved_path.parts[-1] == absolute_path.parts[-1]:
+            return True
+
+        return False
+
+    # if neither file or directory: False; like Path.exists()
+    return False
+
+
 def _load_robot_class():
     """
     Loads a valid robot class from the user's robot.py. This is only loaded
@@ -42,8 +81,11 @@ def _load_robot_class():
     if not robot_py_path:
         print(f"ERROR: internal error", file=sys.stderr)
         sys.exit(1)
-    elif not robot_py_path.exists():
-        print(f"ERROR: {robot_py_path} does not exist", file=sys.stderr)
+    elif not _exists_case_sensitive(robot_py_path):
+        print(
+            f"ERROR: {robot_py_path} does not exist; The file name is case sensitive",
+            file=sys.stderr,
+        )
         sys.exit(1)
     elif robot_py_path.is_dir():
         print(f"ERROR: {robot_py_path} is a directory", file=sys.stderr)
