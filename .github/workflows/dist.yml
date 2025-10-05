@@ -27,6 +27,7 @@ jobs:
       run: |
         pip --disable-pip-version-check install mypy
         pip --disable-pip-version-check install -e .
+        pip --disable-pip-version-check install -r tests/requirements.txt
     - name: Run mypy
       uses: liskin/gh-problem-matcher-wrap@v2
       with:
@@ -57,9 +58,42 @@ jobs:
         name: dist
         path: dist
   
+  test:
+    needs: [build]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: ["ubuntu-22.04", "macos-14", "windows-2022"]
+
+    steps:
+    - uses: actions/checkout@v5
+
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.13"
+
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: dist
+        path: dist
+
+    - name: Install
+      shell: bash
+      working-directory: dist
+      run: python -m pip --disable-pip-version-check install *.whl
+
+    - name: Install test dependencies
+      working-directory: tests
+      run: python -m pip --disable-pip-version-check install -r requirements.txt
+
+    - name: Test wheel
+      working-directory: tests
+      run: python run_tests.py
+
   publish:
     runs-on: ubuntu-latest
-    needs: [check, check-mypy, build]
+    needs: [check, check-mypy, build, test]
     permissions:
       id-token: write
     if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')

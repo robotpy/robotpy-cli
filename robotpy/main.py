@@ -49,6 +49,17 @@ def _load_robot_class():
         print(f"ERROR: {robot_py_path} is a directory", file=sys.stderr)
         sys.exit(1)
 
+    # Ensure that it's robot.py and not Robot.py or similar by checking the
+    # directory entries of its parent
+    lower_name = robot_py_path.name.lower()
+    for entry in robot_py_path.parent.iterdir():
+        if entry.name.lower() == lower_name and entry.name != robot_py_path.name:
+            print(
+                f"ERROR: {robot_py_path} must be {robot_py_path.name} (found '{entry.name}')",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+
     # Add that directory to sys.path to ensure that imports work as expected
     sys.path.insert(0, str(robot_py_path.parent.absolute()))
 
