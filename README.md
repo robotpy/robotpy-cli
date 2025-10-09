@@ -23,7 +23,7 @@ How RobotPy subcommands are implemented
 
 When a user runs `robotpy` or `python -m robotpy`, they are presented with
 several subcommands. Each of these subcommands is implemented as a class
-that is registered using python's entry point mechanism in the "robotpy"
+that is registered using python's entry point mechanism in the "robotpy_cli.YEAR"
 group. The registered class must meet the following requirements:
 
 * The docstring of the class is used when the user does --help. The first

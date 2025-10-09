@@ -251,7 +251,7 @@ def main() -> typing.NoReturn:
 
     cmds: typing.List[typing.Tuple[str, typing.Any]] = []
 
-    for entry_point in entry_points(group="robotpy"):
+    for entry_point in entry_points(group="robotpy_cli.2026"):
         try:
             cmd_class = entry_point.load()
         except Exception:
