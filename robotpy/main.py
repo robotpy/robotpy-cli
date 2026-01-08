@@ -137,7 +137,7 @@ def _enable_faulthandler():
 
         faulthandler.enable()
     except Exception as e:
-        logger.warn("Could not enable faulthandler: %s", e)
+        logger.warning("Could not enable faulthandler: %s", e)
         return
 
     try:
