@@ -48,6 +48,11 @@ If it is a subcommand that is executed:
   * `robot_class` - if specified, the user's robot.py will be loaded and
     it will be inspected for their robot class, which will be passed in
     as this option
+  * `load_robot_class` - if specified, this is a function that will return
+    the same object that `robot_class` would have returned. The robot class
+    will *not* be loaded until the function is called. You may not specify
+    `robot_class` and `load_robot_class`, and you should not call the function
+    more than once.
   * `main_file` - if specified, the name of the user's robot.py file. This
     is not guaranteed to exist unless robot_class is also an option.
   * `project_path` - if specified, the name of the directory that contains 

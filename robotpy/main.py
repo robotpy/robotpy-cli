@@ -31,6 +31,10 @@ def _load_robot_class():
     if the subcommand class asks for it via a ``robot_class`` argument to its
     ``run`` function.
     """
+
+    # faulthandler is primarily useful if robot code is going to be executed
+    _enable_faulthandler()
+
     try:
         import wpilib  # type: ignore
     except ImportError:
@@ -301,10 +305,13 @@ def main() -> typing.NoReturn:
     # Special arguments for backwards compat
     if params.pop("options", None):
         kwargs["options"] = options
+
     if params.pop("robot_class", None):
-        # faulthandler is primarily useful if robot code is going to be executed
-        _enable_faulthandler()
+        assert "load_robot_class" not in params
         kwargs["robot_class"] = _load_robot_class()
+    elif params.pop("load_robot_class", None):
+        kwargs["load_robot_class"] = _load_robot_class
+
     if params.pop("main_file", None):
         kwargs["main_file"] = main_file
     if params.pop("project_path", None):
