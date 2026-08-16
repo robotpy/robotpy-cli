@@ -296,7 +296,8 @@ def _run(
     for k, v in params.items():
         if v.kind in ok_args:
             # An error here is an error in the command -- should never happen
-            kwargs[k] = getattr(options, k)
+            if v.default is inspect.Parameter.empty or hasattr(options, k):
+                kwargs[k] = getattr(options, k)
         elif v.kind in bad_args:
             raise ValueError(
                 "internal error: subcommands may only have keyword or normal arguments"

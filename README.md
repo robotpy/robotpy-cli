@@ -42,8 +42,10 @@ If it is a subcommand that is executed:
   The object may register any arguments or subparsers that it needs.
 * The `run` function is called when the subcommand is used by the user.
   The arguments to this function are passed in by name, and the names can
-  be any of the options that the subcommand registered. There are two other
-  special argument names:
+  be any of the options that the subcommand registered. A parameter without
+  a corresponding registered option must have a default value; when the
+  option is absent, Python uses that default. There are also these special
+  argument names:
   * `options` - if specified, this is the Namespace returned by parse_args
   * `robot_class` - if specified, the user's robot.py will be loaded and
     it will be inspected for their robot class, which will be passed in

@@ -35,6 +35,22 @@ def test_command_arguments_are_dispatched(tmp_path):
     assert received == {"count": 3}
 
 
+def test_run_parameter_without_parser_argument_uses_default():
+    received = []
+
+    class Command:
+        def __init__(self, parser):
+            pass
+
+        def run(self, mode="default-mode"):
+            received.append(mode)
+
+    exit_code = main._run(["sample"], [("sample", Command)])
+
+    assert exit_code == 0
+    assert received == ["default-mode"]
+
+
 def test_nested_subcommand_is_dispatched():
     received = []
 
