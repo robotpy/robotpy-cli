@@ -209,21 +209,16 @@ def _make_subcommands(
             cmdparser.set_defaults(cmdobj=obj)
 
 
-def main() -> typing.NoReturn:
-    """
-    This function loads available entry points, parses arguments, and
-    sets things up specific to RobotPy so that the robot can run. This
-    function is used whether the code is running on the roboRIO or
-    a simulation.
-    """
+def _run(
+    args: typing.List[str], cmds: typing.List[typing.Tuple[str, typing.Any]]
+) -> typing.Any:
+    """Parse arguments and run the selected command."""
 
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        description=inspect.cleandoc(
-            """
+        description=inspect.cleandoc("""
             RobotPy CLI. See below for subcommands to accomplish various tasks for your robot project.
-        """
-        ),
+        """),
     )
 
     # This allows the user to name their robot.py file something different
@@ -251,28 +246,6 @@ def main() -> typing.NoReturn:
         help="Ignore errors caused by RobotPy plugins (probably should fix or replace instead!)",
     )
 
-    has_cmd = False
-
-    cmds: typing.List[typing.Tuple[str, typing.Any]] = []
-
-    for entry_point in entry_points(group="robotpy_cli.2027"):
-        try:
-            cmd_class = entry_point.load()
-        except Exception:
-            if "--ignore-plugin-errors" in sys.argv:
-                print(f"WARNING: Ignoring error in '{entry_point}'")
-                continue
-            else:
-                traceback.print_exc(file=sys.stderr)
-                print(
-                    f"Plugin error detected in '{entry_point}' (use "
-                    "--ignore-plugin-errors to ignore this)",
-                    file=sys.stderr,
-                )
-                sys.exit(1)
-
-        cmds.append((entry_point.name, cmd_class))
-
     _make_subcommands(parser, cmds, "command")
 
     if not cmds:
@@ -281,7 +254,7 @@ def main() -> typing.NoReturn:
         )
         sys.exit(1)
 
-    options = parser.parse_args()
+    options = parser.parse_args(args)
     if options.command is None or getattr(options, "cmdobj", None) is None:
         getattr(options, "parser", parser).print_help()
         sys.exit(1)
@@ -338,4 +311,35 @@ def main() -> typing.NoReturn:
     elif retval is False:
         retval = 1
 
-    sys.exit(retval)
+    return retval
+
+
+def main() -> typing.NoReturn:
+    """
+    This function loads available entry points, parses arguments, and
+    sets things up specific to RobotPy so that the robot can run. This
+    function is used whether the code is running on the roboRIO or
+    a simulation.
+    """
+
+    cmds: typing.List[typing.Tuple[str, typing.Any]] = []
+
+    for entry_point in entry_points(group="robotpy_cli.2027"):
+        try:
+            cmd_class = entry_point.load()
+        except Exception:
+            if "--ignore-plugin-errors" in sys.argv:
+                print(f"WARNING: Ignoring error in '{entry_point}'")
+                continue
+            else:
+                traceback.print_exc(file=sys.stderr)
+                print(
+                    f"Plugin error detected in '{entry_point}' (use "
+                    "--ignore-plugin-errors to ignore this)",
+                    file=sys.stderr,
+                )
+                sys.exit(1)
+
+        cmds.append((entry_point.name, cmd_class))
+
+    sys.exit(_run(sys.argv[1:], cmds))

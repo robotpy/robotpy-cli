@@ -19,15 +19,11 @@ def mock_wpilib(monkeypatch):
 def test_load_robot_class_exact_case(tmp_path, monkeypatch, capsys):
     # create correct-case file
     robot_py = tmp_path / "robot.py"
-    robot_py.write_text(
-        textwrap.dedent(
-            """
+    robot_py.write_text(textwrap.dedent("""
         import wpilib
         class MyRobot(wpilib.RobotBase):
             pass                                 
-    """
-        )
-    )
+    """))
 
     monkeypatch.setattr(main, "robot_py_path", robot_py)
 
@@ -38,15 +34,11 @@ def test_load_robot_class_exact_case(tmp_path, monkeypatch, capsys):
 def test_load_robot_class_wrong_case(tmp_path, monkeypatch, capsys):
     robot_py = tmp_path / "robot.py"
     Robot_py = tmp_path / "Robot.py"
-    Robot_py.write_text(
-        textwrap.dedent(
-            """
+    Robot_py.write_text(textwrap.dedent("""
         import wpilib
         class MyRobot(wpilib.RobotBase):
             pass
-    """
-        )
-    )
+    """))
 
     case_insensitive_fs = robot_py.exists()
 
